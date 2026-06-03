@@ -1,8 +1,7 @@
-# 1newDay sunrise Countdown ☀️⌛
+# 1neuerTag 1newDay - sunrise Countdown ☀️⌛
 
 A minimalist, privacy-focused browser extension that displays a beautiful, animated countdown until the next local sunrise. Featuring a meditative hourglass aesthetic, smooth pulsing star constellations, and an instant test mode.
 
----
 
 ## Features
 
@@ -12,7 +11,6 @@ A minimalist, privacy-focused browser extension that displays a beautiful, anima
 * **Universal Compatibility:** Works flawlessly on Manifest V3 supported browsers including Google Chrome, Brave, and Mozilla Firefox.
 * **Built-in Test Mode:** Switch into test mode anytime to preview the sunrise animation sequence instantly.
 
----
 
 ## File Structure
 
@@ -23,9 +21,9 @@ A minimalist, privacy-focused browser extension that displays a beautiful, anima
 ├── app.js              # Core UI logic and countdown timer
 ├── suncalc.js          # Offline astronomical calculation engine
 └── background.js       # Background script to launch the extension
-
-Installation & Setup
-For Google Chrome & Brave
+```
+## Installation & Setup
+### For Google Chrome & Brave
 
     Clone or download this repository to your local machine.
 
@@ -37,7 +35,7 @@ For Google Chrome & Brave
 
     Select the root folder containing the extension files.
 
-For Mozilla Firefox (Developer Edition / Nightly)
+### For Mozilla Firefox (Developer Edition / Nightly)
 
 Since this extension runs purely locally, you can load it permanently in Firefox Developer Edition:
 
@@ -49,12 +47,14 @@ Since this extension runs purely locally, you can load it permanently in Firefox
 
     Open about:addons, click the gear icon ⚙️, select Install Add-on From File..., and choose your .xpi file.
 
-Technical Details
+## Technical Details
 
     Frameworks used: None. Built entirely with vanilla HTML5, CSS3 Grid/Flexbox, and pure modern JavaScript.
 
     Astronomy Engine: Powered by a localized, CSP-compliant implementation of SunCalc to compute precise solar positions mathematically without external API dependencies.
 
-License
+## License
 
 This project is open-source and available under the MIT License.
+
+Made in Berlin by <a href="https://github.com/kick-ban-ignore" target="_blank" rel="noopener noreferrer">Max</a>, ❤️ and ☕ and some AI for making text more readable 🤖 and talking me out of stupid ideas.
