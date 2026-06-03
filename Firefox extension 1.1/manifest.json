@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "1neuerTag Sonnenaufgang Countdown",
+  "version": "1.1",
+  "description": "Ein minimalistischer Countdown bis zum nächsten Sonnenaufgang.",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "action": {
+    "default_title": "Countdown öffnen"
+  },
+  "permissions": [
+    "geolocation"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "sonnenaufgang-countdown@max.berlin",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}

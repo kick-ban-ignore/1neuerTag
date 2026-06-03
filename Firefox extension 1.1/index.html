@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1neuerTag Sonnenaufgang Countdown</title>
+    <style>
+        :root {
+            /* Palette der Morgenröte */
+            --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #1a1528 40%, #3a1c31 75%, #6b2d2d 100%);
+            --text-main: #fff3e0;
+            --glass-color: rgba(255, 243, 224, 0.04);
+            --sand-color: rgba(255, 167, 38, 0.08);
+            --stream-color: rgba(255, 167, 38, 0.12);
+            
+            /* Dimensionen der Sanduhr */
+            --hourglass-width: 400px;
+            --hourglass-height: 460px;
+            
+            /* Gemeinsame Schrift-Definition für Zahlen und Sonne */
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Hauptcontainer */
+        .app-container {
+            position: relative;
+            width: var(--hourglass-width);
+            height: var(--hourglass-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            container-type: size; 
+        }
+
+        /* Hintergrund-Sanduhr mit weichem Übergang für die Transparenz */
+        .background-hourglass {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            transition: opacity 1s ease, filter 1s ease;
+            opacity: 1;
+        }
+
+        /* Zustand, wenn die Sonne scheint: fast komplett transparent */
+        .background-hourglass.faded {
+            opacity: 0.03;
+            filter: blur(1px);
+        }
+
+        .glass-edge {
+            fill: none;
+            stroke: var(--glass-color);
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+
+        .sand-top, .sand-bottom {
+            fill: var(--sand-color);
+        }
+
+        .sand-stream {
+            stroke: var(--stream-color);
+            stroke-width: 2;
+            stroke-dasharray: 4, 8;
+            animation: trickle 1.5s linear infinite;
+            display: none;
+        }
+
+        @keyframes trickle {
+            to {
+                stroke-dashoffset: -12;
+            }
+        }
+
+        /* Vordergrund-Inhalt */
+        .foreground-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Timer-Grid */
+        .countdown-grid {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .time-row {
+            height: 33.333%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .time-row:nth-child(2) {
+            padding-bottom: 5cqh;
+        }
+
+        .time-row:last-child {
+            padding-bottom: 10cqh;
+        }
+
+        .time-value {
+            font-size: 32cqh; 
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -4px;
+            line-height: 1;
+            text-align: center;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Proportionales ASCII-Sonne-Grid */
+        .ascii-sun-grid {
+            display: none;
+            grid-template-columns: repeat(13, 1fr);
+            font-family: var(--font-stack);
+            font-size: 26cqh;
+            font-weight: 900;
+            color: #ffb74d;
+            text-shadow: 0 0 20px rgba(255, 183, 77, 0.4);
+            line-height: 0.65;
+            text-align: center;
+            width: 100%;
+            user-select: none;
+        }
+
+        .ascii-sun-grid span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1;
+	    min-width: 100%; /* Zwingt Chrome/Brave dazu, leere Zellen exakt gleich groß zu halten */
+        }
+
+        /* Glitzer-Animationen - DEUTLICH LANGSAMER (von ~2s auf 5-7s erhöht) */
+        .sparkle-1 { animation: shimmer 5.2s ease-in-out infinite; }
+        .sparkle-2 { animation: shimmer 6.8s ease-in-out infinite 1.5s; }
+        .sparkle-3 { animation: shimmer 4.9s ease-in-out infinite 2.2s; }
+        .sparkle-4 { animation: shimmer 5.5s ease-in-out infinite 3.4s; }
+        .sparkle-large { animation: shimmer-heavy 7.2s ease-in-out infinite 0.8s; }
+
+        /* Größenstaffelung */
+        .dot-small { font-size: 0.45rem; }
+        .dot-medium { font-size: 0.75rem; }
+        .star-small { font-size: 0.65rem; }
+        .star-large { font-size: 1.35rem; color: #ffe082; }
+        .cross-large { font-size: 1.1rem; color: #ffe082; font-weight: 300; }
+
+        /* Sanftes Pulsieren ohne Lageveränderung */
+        @keyframes shimmer {
+            0%, 100% { 
+                opacity: 0.05; 
+                transform: scale(0.7); 
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.1); 
+                filter: drop-shadow(0 0 8px rgba(255, 183, 77, 0.6));
+            }
+        }
+
+        /* Schweres Shimmern für große Sterne - Rotation entfernt, um das Wackeln zu stoppen */
+        @keyframes shimmer-heavy {
+            0%, 100% { 
+                opacity: 0.05; 
+                transform: scale(0.6); 
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.15); 
+                filter: drop-shadow(0 0 12px rgba(255, 224, 130, 0.7));
+            }
+        }
+
+        /* Unauffällige Buttons an den Ecken */
+        .settings-toggle, .fullscreen-toggle {
+            position: absolute;
+            bottom: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            opacity: 0.15;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            padding: 5px;
+            user-select: none;
+        }
+
+        .settings-toggle { left: 15px; }
+        .fullscreen-toggle { right: 15px; }
+
+        .settings-toggle:hover, .fullscreen-toggle:hover { opacity: 0.6; }
+        .settings-toggle:active, .fullscreen-toggle:active { transform: scale(0.9); }
+
+        /* Slide-in Settings Menu */
+        .settings-sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 300px;
+            height: 100vh;
+            background: rgba(15, 15, 27, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 243, 224, 0.08);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-sidebar.open { left: 0; }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 243, 224, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .settings-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #ffb74d;
+        }
+
+        .close-settings {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        }
+
+        .close-settings:hover { opacity: 1; }
+        .settings-group { margin-bottom: 25px; }
+        .settings-label {
+            display: block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 243, 224, 0.03);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* Button für den Timer-Toggle im Menü */
+        .menu-action-btn {
+            background: rgba(255, 183, 77, 0.1);
+            border: 1px solid rgba(255, 183, 77, 0.2);
+            color: #ffb74d;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s, border 0.2s;
+        }
+
+        .menu-action-btn:hover {
+            background: rgba(255, 183, 77, 0.2);
+            border-color: rgba(255, 183, 77, 0.4);
+        }
+
+        /* Unten fixierter Footer im Menü */
+        .settings-footer {
+            position: absolute;
+            bottom: 30px;
+            left: 25px;
+            right: 25px;
+            font-size: 0.8rem;
+            opacity: 0.4;
+            letter-spacing: 0.3px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 243, 224, 0.05);
+            padding-top: 15px;
+            user-select: none;
+        }
+
+        /* Stil für den GitHub-Link */
+        .settings-footer a {
+            color: #ffb74d;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+        }
+
+        .settings-footer a:hover {
+            color: #ffe082;
+            text-shadow: 0 0 8px rgba(255, 224, 130, 0.4);
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay" class="menu-overlay"></div>
+
+    <div id="sidebar" class="settings-sidebar">
+        <div>
+            <div class="settings-header">
+                <h2>Einstellungen</h2>
+                <button id="close-btn" class="close-settings" title="Schließen">&times;</button>
+            </div>
+            
+            <div class="settings-group">
+                <span class="settings-label">Optionen</span>
+                <div class="settings-item">
+                    <span>Standort automatisch</span>
+                    <span style="color: #ffb74d;">An</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <span class="settings-label">Design</span>
+                <div class="settings-item">
+                    <span>Morgenröte Theme</span>
+                    <span style="color: #ffb74d;">kommt später - Aktiv</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <span class="settings-label">Entwickler</span>
+                <div class="settings-item">
+                    <span>Ansicht testen</span>
+                    <button id="toggle-btn" class="menu-action-btn">Timer umschalten ☼</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-footer">
+            Made in Berlin by <a href="https://github.com/kick-ban-ignore" target="_blank" rel="noopener noreferrer">Max</a>, ❤️ and ☕
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <!-- Blasse Hintergrund-Sanduhr -->
+        <svg id="bg-hourglass" class="background-hourglass" viewBox="0 0 100 140" preserveAspectRatio="none">
+            <clipPath id="top-clip">
+                <rect id="top-sand-rect" x="10" y="10" width="80" height="55" />
+            </clipPath>
+            <path class="sand-top" d="M10,10 C10,40 40,50 45,65 L55,65 C60,50 90,40 90,10 Z" clip-path="url(#top-clip)" />
+
+            <clipPath id="bottom-clip">
+                <rect id="bottom-sand-rect" x="10" y="75" width="80" height="55" />
+            </clipPath>
+            <path class="sand-bottom" d="M45,75 L55,75 C60,90 90,100 90,130 L10,130 C10,100 40,90 45,75 Z" clip-path="url(#bottom-clip)" />
+
+            <path class="glass-edge" d="M10,10 C10,40 40,50 45,65 L45,75 C40,90 10,100 10,130 L90,130 C90,100 60,90 55,75 L55,65 C60,50 90,40 90,10 Z" />
+            <line id="stream" class="sand-stream" x1="50" y1="65" x2="50" y2="125" />
+        </svg>
+
+        <!-- Nahtlose Anzeige im Vordergrund -->
+        <div class="foreground-content">
+            <!-- Ablaufender Timer -->
+            <div id="countdown-grid" class="countdown-grid">
+                <div class="time-row">
+                    <span id="hours" class="time-value">00</span>
+                </div>
+                <div class="time-row">
+                    <span id="minutes" class="time-value">00</span>
+                </div>
+                <div class="time-row">
+                    <span id="seconds" class="time-value">00</span>
+                </div>
+            </div>
+
+            <!-- Rasterbasierte ASCII Sonne (Perfekt zentriert) -->
+            <div id="sunrise-ascii" class="ascii-sun-grid">
+                <!-- Zeile 1 -->
+                <span></span><span></span><span></span><span class="sparkle-large cross-large">+</span><span></span><span class="sparkle-3 dot-small">.</span><span></span><span class="sparkle-1 star-small">*</span><span></span><span></span><span></span><span></span><span></span>
+                <!-- Zeile 2 -->
+                <span></span><span></span><span></span><span class="sparkle-2 dot-medium">•</span><span></span><span></span><span class="sparkle-large star-large">★</span><span></span><span></span><span class="sparkle-3 dot-small">.</span><span></span><span></span><span></span>
+                <!-- Zeile 3 (Sonne sitzt genau auf Position 7) -->
+                <span></span><span></span><span class="sparkle-1 star-small">*</span><span></span><span class="sparkle-4 dot-small">.</span><span></span><span style="color: #ffb74d;">☼</span><span></span><span class="sparkle-2 dot-medium">•</span><span></span><span class="sparkle-large cross-large">+</span><span></span><span></span>
+                <!-- Zeile 4 -->
+                <span></span><span></span><span></span><span class="sparkle-3 dot-small">.</span><span></span><span></span><span class="sparkle-2 dot-medium">•</span><span></span><span></span><span class="sparkle-4 star-small">*</span><span></span><span></span><span></span>
+                <!-- Zeile 5 -->
+                <span></span><span></span><span></span><span></span><span></span><span class="sparkle-large star-large">★</span><span></span><span class="sparkle-3 dot-small">.</span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Die beiden Buttons an den äußeren Ecken unten -->
+    <button id="settings-btn" class="settings-toggle" title="Einstellungen">⚙</button>
+    <button id="fullscreen-btn" class="fullscreen-toggle" title="Vollbildmodus umschalten">⛶</button>
+
+    <!-- HIER STEHT JETZT SUNCALC ZUERST -->
+    <script>
+    const SunCalc = (function() {
+        const rad = Math.PI / 180;
+        const e = rad * 23.4397; 
+        
+        function toJulian(date) { return (date.valueOf() / 86400000) - (date.getTimezoneOffset() / 1440) + 2440587.5; }
+        function fromJulian(j) { return new Date((j - 2440587.5) * 86400000); }
+        function toDays(date) { return toJulian(date) - 2451545.0; }
+        
+        function sunCoords(d) {
+            const M_coord = rad * (357.5291 + 0.98560028 * d);
+            const C = rad * (1.9148 * Math.sin(M_coord) + 0.02 * Math.sin(2 * M_coord) + 0.0003 * Math.sin(3 * M_coord));
+            const lambda = M_coord + C + rad * 102.9372 + Math.PI;
+            return {
+                dec: Math.asin(Math.sin(lambda) * Math.sin(e)),
+                ra: Math.atan2(Math.sin(lambda) * Math.cos(e), Math.cos(lambda))
+            };
+        }
+
+        return {
+            getTimes: function(date, lat, lng) {
+                const lw = rad * -lng;
+                const phi = rad * lat;
+                const d = toDays(date);
+                const n = Math.round(d - 0.0009 - lw / (2 * Math.PI));
+                
+                const M_annex = 357.5291 + 0.98560028 * d + rad * 102.9372 + Math.PI;
+                const Jtransit = 2451545.0 + 0.0009 + lw / (2 * Math.PI) + n + 0.0053 * Math.sin(rad * (357.5291 + 0.98560028 * d)) - 0.0069 * Math.sin(2 * rad * M_annex);
+                const c = sunCoords(Jtransit - 2451545.0);
+                const h0 = rad * -0.833;
+                
+                const cosH = (Math.sin(h0) - Math.sin(phi) * Math.sin(c.dec)) / (Math.cos(phi) * Math.cos(c.dec));
+                
+                if (cosH > 1 || cosH < -1) {
+                    return { sunrise: new Date(date.getTime() + 86400000), sunset: new Date(date.getTime() - 86400000) };
+                }
+                
+                const H = Math.acos(cosH);
+                const Jset = Jtransit + H / (2 * Math.PI);
+                const Jrise = Jtransit - H / (2 * Math.PI);
+                
+                return {
+                    sunrise: fromJulian(Jrise),
+                    sunset: fromJulian(Jset)
+                };
+            }
+        };
+    })();
+    </script>
+    
+    <!-- DANN ERST APP.JS LADEN -->
+    <script src="suncalc.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
