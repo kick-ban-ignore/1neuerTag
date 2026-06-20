@@ -2,6 +2,9 @@
 
 A minimalist, privacy-focused browser extension that displays a beautiful, animated countdown until the next local sunrise. Featuring a meditative hourglass aesthetic, smooth pulsing star constellations, and an instant test mode.
 
+<img width="400" height="460" alt="sonne klein" src="https://github.com/user-attachments/assets/68da049b-c225-495a-87c4-82fa71be059c" />
+<img width="587" height="460" alt="sonne mit zeit" src="https://github.com/user-attachments/assets/e51b986f-2ff7-4167-b2f5-4408e535746e" />
+
 
 ## Features
 
